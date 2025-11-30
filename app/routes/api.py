@@ -10,6 +10,7 @@ def get_stats():
     conn = get_connection()
     cur = conn.cursor()
     try:
+        # No indexes yet since no where clauses; just counting rows
         users_count_query = cur.execute("SELECT COUNT(id) FROM users")
         users_count = users_count_query.fetchone()[0]
         posts_count_query = cur.execute("SELECT COUNT(id) FROM posts")
@@ -35,11 +36,55 @@ def recent_activity(offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, l
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute(f"SELECT id, user_id, action, created_at FROM activities ORDER BY created_at DESC, id DESC OFFSET {offset} LIMIT {limit}")
-        rows = cur.fetchall()
+        # Convert offset to keyset pagination for better performance
+        # First, get the boundary record at the offset position
+        if offset > 0:
+            cur.execute(
+                """
+                SELECT created_at, id
+                FROM activities
+                ORDER BY created_at DESC, id DESC
+                LIMIT 1 OFFSET %s
+                """,
+                (offset - 1,)
+            )
+            boundary = cur.fetchone()
+
+            if boundary:
+                # Use keyset pagination from the boundary
+                cur.execute(
+                    """
+                    SELECT id, user_id, action, created_at
+                    FROM activities
+                    WHERE (created_at, id) < (%s, %s)
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT %s
+                    """,
+                    (boundary[0], boundary[1], limit)
+                )
+            else:
+                # Offset beyond dataset
+                rows = []
+        else:
+            # First page: no offset
+            cur.execute(
+                """
+                SELECT id, user_id, action, created_at
+                FROM activities
+                ORDER BY created_at DESC, id DESC
+                LIMIT %s
+                """,
+                (limit,)
+            )
+
+        if offset == 0 or (offset > 0 and boundary):
+            rows = cur.fetchall()
+
         activities = [
-            {"id": row[0], "user_id": row[1], "action": row[2], "created_at": row[3].isoformat()} for row in rows
+            {"id": row[0], "user_id": row[1], "action": row[2], "created_at": row[3].isoformat()}
+            for row in rows
         ]
+
         return {"activities": activities}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
