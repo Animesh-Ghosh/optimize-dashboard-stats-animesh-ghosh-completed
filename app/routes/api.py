@@ -10,10 +10,14 @@ def get_stats():
     conn = get_connection()
     cur = conn.cursor()
     try:
-        users = cur.execute("SELECT * FROM users"); users_count = len(cur.fetchall())
-        posts = cur.execute("SELECT * FROM posts"); posts_count = len(cur.fetchall())
-        comments = cur.execute("SELECT * FROM comments"); comments_count = len(cur.fetchall())
-        sessions = cur.execute("SELECT * FROM sessions"); sessions_count = len(cur.fetchall())
+        users_count_query = cur.execute("SELECT COUNT(id) FROM users")
+        users_count = users_count_query.fetchone()[0]
+        posts_count_query = cur.execute("SELECT COUNT(id) FROM posts")
+        posts_count = posts_count_query.fetchone()[0]
+        comments_count_query = cur.execute("SELECT COUNT(id) FROM comments")
+        comments_count = comments_count_query.fetchone()[0]
+        sessions_count_query = cur.execute("SELECT COUNT(id) FROM sessions")
+        sessions_count = sessions_count_query.fetchone()[0]
         return {
             "users": users_count,
             "posts": posts_count,
