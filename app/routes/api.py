@@ -35,7 +35,6 @@ def get_stats():
 def recent_activity(offset: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=100)):
     conn = get_connection()
     cur = conn.cursor()
-    # TODO: Add indexes on created_at desc and perhaps id desc
     try:
         # Convert offset to keyset pagination for better performance
         # First, get the boundary record at the offset position
