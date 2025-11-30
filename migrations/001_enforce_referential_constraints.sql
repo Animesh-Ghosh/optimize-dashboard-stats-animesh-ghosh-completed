@@ -1,0 +1,35 @@
+-- Enforce relationships via foreign key constraints
+ALTER TABLE posts
+ADD CONSTRAINT fk_users_posts
+FOREIGN KEY (user_id)
+REFERENCES users (id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE comments
+ADD CONSTRAINT fk_users_comments
+FOREIGN KEY (user_id)
+REFERENCES users (id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE comments
+ADD CONSTRAINT fk_posts_comments
+FOREIGN KEY (post_id)
+REFERENCES posts (id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE sessions
+ADD CONSTRAINT fk_users_sessions
+FOREIGN KEY (user_id)
+REFERENCES users (id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+ALTER TABLE activities
+ADD CONSTRAINT fk_users_activities
+FOREIGN KEY (user_id)
+REFERENCES users (id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
